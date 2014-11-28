@@ -84,7 +84,7 @@ void myDisplay(void)
 	
 	//Realized that I had made a sort of solid pseudo-factory, so I only need 1 solid
 	//Could have made a nicer solid that hid more openGL calls if I included material and transformation in the class
-	Solid* solidGen = new Solid();
+	/*Solid* solidGen = new Solid();
 
 	//Shift for aesthetics
 	glTranslatef(0.0f, 0.2f, 0.0f);
@@ -365,7 +365,7 @@ void myDisplay(void)
 			solidGen->render();
 		glPopMatrix();
 
-	glPopMatrix();
+	glPopMatrix();*/
 
 	
 	glFlush();
