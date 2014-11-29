@@ -24,6 +24,10 @@
 #include <time.h>
 
 #include "Solid.h"
+#include "Box.h"
+#include "Vector3.h"
+#include "Material.h"
+#include "Ray.h"
 
 const double PI = 3.1415926;
 const int screenWidth = 640;
@@ -32,8 +36,13 @@ const int screenHeight = 480;
 clock_t startTime;
 const double fanSpeed = 540;	//Speed of fan rotation is degree/second
 
+Ray* camera;
+
 void myDisplay(void)
 {
+	camera = new Ray(new Vector3(2.3, 1.3, 2.0), new Vector3(-2.3, -1.05, -2.0));
+
+
 	// set properties of the surface material
 	GLfloat mat_ambient_grey[] = { 0.7f, 0.7f, 0.7f, 1.0f };   //gray
 	GLfloat mat_diffuse_grey[] = { 0.6f, 0.6f, 0.6f, 1.0f };
@@ -71,16 +80,9 @@ void myDisplay(void)
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightIntensity);
 
-	glMatrixMode(GL_MODELVIEW);      // position and aim the camera
-	glLoadIdentity();
-	gluLookAt(2.3, 1.3, 2.0, 0.0, 0.25, 0.0, 0.0, 1.0, 0.0);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45.0f, screenWidth / screenHeight, 0.2f, 255.0f);
-
-	glMatrixMode(GL_MODELVIEW);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // clear the screen
+
+
 	
 	//Realized that I had made a sort of solid pseudo-factory, so I only need 1 solid
 	//Could have made a nicer solid that hid more openGL calls if I included material and transformation in the class
@@ -370,7 +372,7 @@ void myDisplay(void)
 	
 	glFlush();
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 void myMouse(int button, int state, int x, int y)

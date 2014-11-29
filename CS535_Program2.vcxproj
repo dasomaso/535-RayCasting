@@ -14,6 +14,7 @@
     <ProjectGuid>{9C9DAFA6-EF23-4F50-91EE-06280A76C442}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>CS535_Program2</RootNamespace>
+    <ProjectName>CS535_RayCasting</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -81,13 +82,17 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Box.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Ray.h" />
     <ClInclude Include="Solid.h" />
+    <ClInclude Include="Vector3.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CS535_Program2.cpp" />
-    <ClCompile Include="Solid.cpp" />
+    <ClCompile Include="Box.cpp" />
+    <ClCompile Include="CS535_RayCasting.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -45,12 +45,41 @@ public:
 			(z - v2->z));
 	}
 
+	Vector3* multiply(Vector3* v2)
+	{
+		return new Vector3(
+			(x * v2->x),
+			(y * v2->y),
+			(z * v2->z));
+	}
+
+	Vector3* multiply(float c)
+	{
+		return new Vector3(
+			(x * c),
+			(y * c),
+			(z * c));
+	}
+
+	Vector3* divide(Vector3* v2)
+	{
+		return new Vector3(
+			(x / v2->x),
+			(y / v2->y),
+			(z / v2->z));
+	}
+
 	Vector3* divide(float c)
 	{
 		return new Vector3(
 			(x / c),
 			(y / c),
 			(z / c));
+	}
+
+	float dot(Vector3* v2)
+	{
+		return x*v2->x + y*v2->y + z*v2->z;
 	}
 };
 #endif
