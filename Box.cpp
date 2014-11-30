@@ -12,99 +12,93 @@
 #include "Solid.h"
 #include "Box.h"
 
-Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
-	std::cout << "Finding intercept\n";
+Solid::Intercept Box::FindRayIntersect(Ray ray) {
+	Solid::Intercept result;
+	result.mat = mat;
+	result.normal = new Vector3();
+	result.point = new Vector3();
+	result.t = std::numeric_limits<float>::infinity();
 
-	Solid::Intercept* result;
-	result->mat = mat;
-	result->normal = normals[0];
-	result->t = std::numeric_limits<float>::infinity();
+	//Transform ray to local coordinates
+	ray.inverseTransform(position, rotation, scale);
 
-	ray->transform(position, rotation, scale);
-
-	float t = std::numeric_limits<float>::infinity();
+	float tmp_t = std::numeric_limits<float>::infinity();
+	Vector3* intersect;
 	//+x face
-	float tmp_t = ((corners[0]->subtract(ray->start))->dot(normals[0])) / (ray->direction->dot(normals[0]));
-	Vector3* intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (0.5 - ray.start->x) / (ray.direction->x);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->y >= -0.5 && intersect->y <= 0.5
 		&& intersect->z >= -0.5 && intersect->z <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[0];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(1.0, 0.0, 0.0);
+		result.t = tmp_t;
 	}
 
 	//+y face
-	tmp_t = ((corners[0]->subtract(ray->start))->dot(normals[1])) / (ray->direction->dot(normals[1]));
-	intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (0.5 - ray.start->y) / (ray.direction->y);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->z >= -0.5 && intersect->z <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[1];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(0.0, 1.0, 0.0);
+		result.t = tmp_t;
 	}
 
 	//+z face
-	tmp_t = ((corners[0]->subtract(ray->start))->dot(normals[2])) / (ray->direction->dot(normals[2]));
-	intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (0.5 - ray.start->z) / (ray.direction->z);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[2];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(0.0, 0.0, 1.0);
+		result.t = tmp_t;
 	}
 
 	//-x face
-	tmp_t = ((corners[1]->subtract(ray->start))->dot(normals[3])) / (ray->direction->dot(normals[3]));
-	intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (-0.5 - ray.start->x) / (ray.direction->x);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->z >= -0.5 && intersect->z <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[3];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(-1.0, 0.0, 0.0);
+		result.t = tmp_t;
 	}
 
 	//-y face
-	tmp_t = ((corners[1]->subtract(ray->start))->dot(normals[4])) / (ray->direction->dot(normals[4]));
-	intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (-0.5 - ray.start->y) / (ray.direction->y);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->z >= -0.5 && intersect->z <= 0.5
 		&& intersect->x >= -0.5 && intersect->x <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[4];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(0.0, -1.0, 0.0);
+		result.t = tmp_t;
 	}
 
 	//-z face
-	tmp_t = ((corners[1]->subtract(ray->start))->dot(normals[5])) / (ray->direction->dot(normals[5]));
-	intersect = ray->start->add(ray->direction->multiply(tmp_t));
+	tmp_t = (-0.5 - ray.start->z) / (ray.direction->z);
+	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result->t) {
-		delete result;
-		result = new Solid::Intercept();
-		result->mat = mat;
-		result->normal = normals[5];
-		result->t = tmp_t;
+		&& tmp_t < result.t) {
+		result.mat = mat;
+		result.point = intersect->transform(*position, *rotation, *scale);
+		result.normal = new Vector3(0.0, 0.0, -1.0);
+		result.t = tmp_t;
 	}
 
-	if (result->t != std::numeric_limits<float>::infinity()) {
-		return result;
-	}
-	else {
-		return NULL;
-	}
+	//Transforms normals from local to world coords
+	result.normal->transform(*position, *rotation, *scale);
+	result.normal->normalize();
+
+	return result;
 }

@@ -81,5 +81,17 @@ public:
 	{
 		return x*v2->x + y*v2->y + z*v2->z;
 	}
+
+	Vector3* transform(Vector3 pos, Vector3 rot, Vector3 scale) {
+		x = x*scale.x;
+		y = y*scale.y;
+		z = z*scale.z;
+
+		x = x+pos.x;
+		y = y+pos.y;
+		z = z+pos.z;
+
+		return this;
+	}
 };
 #endif

@@ -21,20 +21,24 @@ public:
 	Ray() { start = new Vector3(); direction = new Vector3(); }
 	Ray(Vector3* s, Vector3* d) { start = s; direction = d; }
 
-	void transform(Vector3* pos, Vector3* rot, Vector3* scale) {
-		Vector3* base = new Vector3(start->x, start->y, start->z);
-
-		start = start->subtract(base);
-		direction = direction->subtract(base);
+	//Reverses given translation, rotation, and scale transformations
+	void inverseTransform(Vector3* pos, Vector3* rot, Vector3* scale) {
+		start = start->subtract(pos);
+		start = start->divide(scale);
 
 		direction = direction->divide(scale);
-
-		start = start->add(base);
-		start = start->subtract(pos);
-		direction = direction->add(base);
-		direction = direction->subtract(pos);
 	}
 
-	void print() { start->print(); direction->print(); }
+	//Applies translation, rotation, and scale transformations
+	void transform(Vector3* pos, Vector3* rot, Vector3* scale) {
+		start = start->multiply(scale);
+		start = start->add(pos);
+
+		direction = direction->multiply(scale);
+	}
+
+	void print() {
+		std::cout << "(" << start->x << "," << start->y << "," << start->z << ") -> (" << direction->x << "," << direction->y << "," << direction->z << ")";
+	}
 };
 #endif

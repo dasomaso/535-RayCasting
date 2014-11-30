@@ -23,6 +23,7 @@ public:
 
 	struct Intercept {
 		Solid::Material mat;
+		Vector3* point;
 		Vector3* normal;
 		float t;
 	};
@@ -44,7 +45,7 @@ public:
 		mat.shininess = 1.0;
 	}
 
-	virtual Solid::Intercept* FindRayIntersect(Ray* ray) = 0;
+	virtual Solid::Intercept FindRayIntersect(Ray ray) = 0;
 };
 
 #endif

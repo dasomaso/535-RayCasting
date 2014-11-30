@@ -30,21 +30,11 @@ public:
 		position = new Vector3();
 		rotation = new Vector3();
 		scale = new Vector3(1.0, 1.0, 1.0);
-		mat.color[0] = 1.0;
-		mat.color[1] = 1.0;
-		mat.color[2] = 1.0;
+		mat.color[0] = 255;
+		mat.color[1] = 255;
+		mat.color[2] = 255;
 		mat.alpha = 1.0;
 		mat.shininess = 1.0;
-
-		corners[0] = new Vector3(0.5, 0.5, 0.5);
-		corners[1] = new Vector3(-0.5, -0.5, -0.5);
-
-		normals[0] = new Vector3(1.0, 0.0, 0.0);
-		normals[1] = new Vector3(0.0, 1.0, 0.0);
-		normals[2] = new Vector3(0.0, 0.0, 1.0);
-		normals[3] = new Vector3(-1.0, 0.0, 0.0);
-		normals[4] = new Vector3(0.0, -1.0, 0.0);
-		normals[5] = new Vector3(0.0, 0.0, -1.0);
 	}
 
 	Vector3* BoundingBox() {
@@ -54,7 +44,7 @@ public:
 		return *box;
 	}
 
-	Intercept* FindRayIntersect(Ray* ray);
+	Intercept FindRayIntersect(Ray ray);
 };
 
 #endif
