@@ -9,13 +9,14 @@
 #include <limits>
 #include "Vector3.h"
 #include "Ray.h"
-#include "Material.h"
 #include "Solid.h"
 #include "Box.h"
 
 Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
+	std::cout << "Finding intercept\n";
+
 	Solid::Intercept* result;
-	result->mat = &mat;
+	result->mat = mat;
 	result->normal = normals[0];
 	result->t = std::numeric_limits<float>::infinity();
 
@@ -30,7 +31,7 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[0];
 		result->t = tmp_t;
 	}
@@ -43,7 +44,7 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[1];
 		result->t = tmp_t;
 	}
@@ -56,7 +57,7 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[2];
 		result->t = tmp_t;
 	}
@@ -69,7 +70,7 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[3];
 		result->t = tmp_t;
 	}
@@ -82,7 +83,7 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[4];
 		result->t = tmp_t;
 	}
@@ -95,10 +96,15 @@ Solid::Intercept* Box::FindRayIntersect(Ray* ray) {
 		&& tmp_t < result->t) {
 		delete result;
 		result = new Solid::Intercept();
-		result->mat = &mat;
+		result->mat = mat;
 		result->normal = normals[5];
 		result->t = tmp_t;
 	}
 
-	return result;
+	if (result->t != std::numeric_limits<float>::infinity()) {
+		return result;
+	}
+	else {
+		return NULL;
+	}
 }

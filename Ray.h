@@ -22,17 +22,19 @@ public:
 	Ray(Vector3* s, Vector3* d) { start = s; direction = d; }
 
 	void transform(Vector3* pos, Vector3* rot, Vector3* scale) {
-		Vector3* base = start;
+		Vector3* base = new Vector3(start->x, start->y, start->z);
 
-		start->subtract(base);
-		direction->subtract(base);
+		start = start->subtract(base);
+		direction = direction->subtract(base);
 
-		direction->divide(scale);
+		direction = direction->divide(scale);
 
-		start->add(base);
-		start->subtract(pos);
-		direction->add(base);
-		direction->subtract(pos);
+		start = start->add(base);
+		start = start->subtract(pos);
+		direction = direction->add(base);
+		direction = direction->subtract(pos);
 	}
+
+	void print() { start->print(); direction->print(); }
 };
 #endif

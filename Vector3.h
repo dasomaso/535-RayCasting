@@ -13,9 +13,9 @@
 class Vector3
 {
 public:
-	GLfloat x, y, z;
+	float x, y, z;
 	Vector3() { x = 0.0f; y = 0.0f; z = 0.0f; }
-	Vector3(GLfloat _x, GLfloat _y, GLfloat _z) { x = _x; y = _y; z = _z; }
+	Vector3(float _x, float _y, float _z) { x = _x; y = _y; z = _z; }
 	float mag() { return sqrtf(x*x + y*y + z*z); }
 	void normalize() { x = x / mag(); y = y / mag(); z = z / mag(); }
 	

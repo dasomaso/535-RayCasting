@@ -83,7 +83,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Box.h" />
-    <ClInclude Include="Material.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Solid.h" />
     <ClInclude Include="Vector3.h" />
