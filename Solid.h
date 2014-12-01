@@ -21,6 +21,7 @@ public:
 		float shininess;
 		float specCoeff;
 		float specExponent;
+		float reflectionCoeff;
 	};
 
 	struct Intercept {
@@ -47,6 +48,7 @@ public:
 		mat.shininess = 1.0;
 		mat.specCoeff = 1.0;
 		mat.specExponent = 200.0;
+		mat.reflectionCoeff = 0.0;
 	}
 
 	virtual Solid::Intercept FindRayIntersect(Ray ray) = 0;

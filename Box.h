@@ -37,6 +37,7 @@ public:
 		mat.shininess = 1.0;
 		mat.specCoeff = 1.0;
 		mat.specExponent = 200.0;
+		mat.reflectionCoeff = 0.0;
 	}
 
 	Vector3* BoundingBox() {

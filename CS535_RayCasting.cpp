@@ -31,9 +31,9 @@
 #include "Ray.h"
 
 const double PI = 3.1415926;
-const int MAX_RECURSION_DEPTH = 5;
-const float VIEWPORT_X = 6;
-const float VIEWPORT_Y = 4.5;
+const int MAX_RECURSION_DEPTH = 3;
+const float VIEWPORT_X = 4;
+const float VIEWPORT_Y = 3;
 const float FOCAL_LENGTH = -0.5;
 const int screenWidth = 640;
 const int screenHeight = 480;
@@ -42,10 +42,11 @@ GLubyte pixelData[screenHeight][screenWidth][3];
 
 Vector3* light;
 GLubyte lightColor[3];
+GLubyte ambientLight[3];
 
 std::list<Solid*>* objectList;
 
-Ray* camera = new Ray(new Vector3(0, 0, 3.0), new Vector3(0.0, 0.0, -1.0));
+Ray* camera = new Ray(new Vector3(0.0, 0.0, 3.0), new Vector3(0.0, 0.0, -1.0));
 Vector3* urCorner = new Vector3(VIEWPORT_X / 2, VIEWPORT_Y / 2, FOCAL_LENGTH);
 Vector3* blCorner = new Vector3(-1 * VIEWPORT_X / 2, -1 * VIEWPORT_Y / 2, FOCAL_LENGTH);
 Vector3* s;
@@ -76,10 +77,20 @@ Solid::Intercept* sceneHit(Ray* r) {
 	return result;
 }
 
-//Determines the color the passed in ray
+//Determines the color of the passed in ray
 Solid::Intercept* raycast(Ray* r, int depth)
 {
-	if (depth == 0) { return NULL; }
+	//Returns background color if maximum recursion depth was hit
+	if (depth == 0) { 
+		Solid::Intercept* result = new Solid::Intercept();
+		result->mat.color[0] = 25;
+		result->mat.color[1] = 25;
+		result->mat.color[2] = 25;
+		result->normal = new Vector3();
+		result->point = new Vector3();
+		result->t = std::numeric_limits<float>::infinity();
+		return result;
+	}
 
 	//Find object intersection
 	Solid::Intercept* result = sceneHit(r);
@@ -93,7 +104,6 @@ Solid::Intercept* raycast(Ray* r, int depth)
 		Ray* lightRay = new Ray();
 		lightRay->start = result->point;
 		lightRay->direction = light->subtract(result->point);
-		Solid::Intercept* lighthit = sceneHit(lightRay);
 		if (sceneHit(lightRay)->t == std::numeric_limits<float>::infinity()) {
 			Vector3* h = (Vector3::normalize(lightRay->direction))->add(Vector3::normalize(r->direction));
 			h->normalize();
@@ -105,6 +115,15 @@ Solid::Intercept* raycast(Ray* r, int depth)
 				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.specCoeff * pow(h->dot(result->normal), result->mat.specExponent);
 			}
 		}
+
+		//Reflected Light
+		Ray* reflectRay = new Ray();;
+		reflectRay->start = result->point;
+		reflectRay->direction = (r->direction->multiply(-1))->add(result->normal->multiply(2*(r->direction->dot(result->normal)))) ; //ewwwwwwwwwwwwww
+		Solid::Intercept* reflectHit = raycast(reflectRay, depth - 1);
+		for (int i = 0; i < 3; i++) {
+			result->mat.color[i] = result->mat.color[i] + result->mat.specCoeff * reflectHit->mat.color[i];
+		}
 	}
 
 	return result;
@@ -112,22 +131,19 @@ Solid::Intercept* raycast(Ray* r, int depth)
 
 void renderScene()
 {
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
-
 	//Iterate through all screen pixels
 	for (int i = 0; i < screenWidth; i++) {
 		for (int j = 0; j < screenHeight; j++) {
 
 			//Set background color
-			pixelData[j][i][0] = 25;
-			pixelData[j][i][1] = 25;
-			pixelData[j][i][2] = 25;
+			pixelData[j][i][0] = 0.1;
+			pixelData[j][i][1] = 0.1;
+			pixelData[j][i][2] = 0.1;
 
 			//Construct viewing ray
 			s = new Vector3(
-				blCorner->x + (urCorner->x - blCorner->x)*((i + 0.5) / viewport[2]),
-				blCorner->y + (urCorner->y - blCorner->y)*((j + 0.5) / viewport[3]),
+				blCorner->x + (urCorner->x - blCorner->x)*((i + 0.5) / screenWidth),
+				blCorner->y + (urCorner->y - blCorner->y)*((j + 0.5) / screenHeight),
 				urCorner->z
 				);
 
@@ -138,9 +154,9 @@ void renderScene()
 			Solid::Intercept* result = raycast(cast, MAX_RECURSION_DEPTH);
 
 			//If an object was hit, set the color for that pixel appropriately
-			pixelData[j][i][0] = result->mat.color[0];
-			pixelData[j][i][1] = result->mat.color[1];
-			pixelData[j][i][2] = result->mat.color[2];
+			for (int k = 0; k < 3; k++) {
+				pixelData[j][i][k] = result->mat.color[k];
+			}
 		}
 	}
 
@@ -151,45 +167,63 @@ void constructScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // clear the screen
 
-	light = new Vector3(0.0, 6.0, 0.0);
+	light = new Vector3(0.0, 1.0, -0.5);
 	lightColor[0] = 178;
 	lightColor[1] = 178;
 	lightColor[2] = 178;
+	ambientLight[0] = 25;
+	ambientLight[1] = 25;
+	ambientLight[2] = 25;
 
 	objectList = new std::list<Solid*>();
 
 	Box* floor = new Box();
 	floor->scale = new Vector3(1.5, 0.05, 1.5);
 	floor->position = new Vector3(0.0, -0.5, 0.0);
-	floor->mat.color[0] = 178;
+	floor->mat.color[0] = 150;
 	floor->mat.color[1] = 0;
 	floor->mat.color[2] = 0;
-	floor->mat.shininess = 0.4;
-	floor->mat.specCoeff = 0.05;
+	floor->mat.shininess = 0.5;
+	floor->mat.specCoeff = 0.01;
 	floor->mat.specExponent = 10.0;
+	floor->mat.reflectionCoeff = 0.05;
 	objectList->push_back(floor);
 
 	Box* wall1 = new Box();
-	wall1->scale = new Vector3(0.05, 1.0, 1.5);
-	wall1->position = new Vector3(-0.75, 0.0, 0.0);
+	wall1->scale = new Vector3(0.05, 1.025, 1.5);
+	wall1->position = new Vector3(-0.775, 0.0, 0.0);
 	wall1->mat.color[0] = 178;
 	wall1->mat.color[1] = 178;
 	wall1->mat.color[2] = 178;
 	wall1->mat.shininess = 0.4;
-	wall1->mat.specCoeff = 0.05;
+	wall1->mat.specCoeff = 0.1;
 	wall1->mat.specExponent = 10.0;
+	floor->mat.reflectionCoeff = 0.1;
 	objectList->push_back(wall1);
 
 	Box* wall2 = new Box();
-	wall2->scale = new Vector3(1.5, 1.0, 0.05);
-	wall2->position = new Vector3(0.0, 0.0, -0.75);
+	wall2->scale = new Vector3(1.5, 1.025, 0.05);
+	wall2->position = new Vector3(0.0, 0.0, -0.775);
 	wall2->mat.color[0] = 178;
 	wall2->mat.color[1] = 178;
 	wall2->mat.color[2] = 178;
 	wall2->mat.shininess = 0.4;
-	wall2->mat.specCoeff = 0.05;
+	wall2->mat.specCoeff = 0.1;
 	wall2->mat.specExponent = 10.0;
+	floor->mat.reflectionCoeff = 0.1;
 	objectList->push_back(wall2);
+
+	Box* dresser = new Box();
+	dresser->scale = new Vector3(0.2f, 0.5f, 0.4f);
+	dresser->position = new Vector3(-0.625f, -0.25f, 0.475f);
+	dresser->mat.color[0] = 128;
+	dresser->mat.color[1] = 102;
+	dresser->mat.color[2] = 25;
+	dresser->mat.shininess = 0.6;
+	dresser->mat.specCoeff = 0.3;
+	dresser->mat.specExponent = 400.0;
+	floor->mat.reflectionCoeff = 0.3;
+	objectList->push_back(dresser);
 }
 
 void myDisplay(void)
