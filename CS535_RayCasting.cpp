@@ -38,10 +38,10 @@ const float FOCAL_LENGTH = -0.5;
 const int screenWidth = 640;
 const int screenHeight = 480;
 
-//unsigned int*** pixelData;
 GLubyte pixelData[screenHeight][screenWidth][3];
 
 Vector3* light;
+GLubyte lightColor[3];
 
 std::list<Solid*>* objectList;
 
@@ -51,23 +51,70 @@ Vector3* blCorner = new Vector3(-1 * VIEWPORT_X / 2, -1 * VIEWPORT_Y / 2, FOCAL_
 Vector3* s;
 Ray* cast;
 
-Solid::Intercept* raycast(Solid* obj, Ray* r, int depth)
+//Returns an intercept where ray intersects the nearest object in the scene
+Solid::Intercept* sceneHit(Ray* r) {
+	std::list<Solid*>::const_iterator objIterator;
+	Solid::Intercept* result = new Solid::Intercept();
+	result->mat.color[0] = 25;
+	result->mat.color[1] = 25;
+	result->mat.color[2] = 25;
+	result->normal = new Vector3();
+	result->point = new Vector3();
+	result->t = std::numeric_limits<float>::infinity();
+
+	for (objIterator = objectList->begin(); objIterator != objectList->end(); objIterator++)
+	{
+		Solid::Intercept* hit = &((*objIterator)->FindRayIntersect(*r)); //ewwww
+		if (hit && hit->t < result->t) {
+			result->mat = hit->mat;
+			result->normal = hit->normal;
+			result->point = hit->point;
+			result->t = hit->t;
+		}
+	}
+
+	return result;
+}
+
+//Determines the color the passed in ray
+Solid::Intercept* raycast(Ray* r, int depth)
 {
 	if (depth == 0) { return NULL; }
 
-	Solid::Intercept hit = obj->FindRayIntersect(*(r));
+	//Find object intersection
+	Solid::Intercept* result = sceneHit(r);
+	if (result->t != std::numeric_limits<float>::infinity()) {
+		//Ambient lighting
+		for (int i = 0; i < 3; i++) {
+			result->mat.color[i] = result->mat.color[i] * result->mat.shininess;
+		}
 
-	depth--;
-	if (hit.t != std::numeric_limits<float>::infinity()) {
-		return &hit;
+		//Direct Lighting
+		Ray* lightRay = new Ray();
+		lightRay->start = result->point;
+		lightRay->direction = light->subtract(result->point);
+		Solid::Intercept* lighthit = sceneHit(lightRay);
+		if (sceneHit(lightRay)->t == std::numeric_limits<float>::infinity()) {
+			Vector3* h = (Vector3::normalize(lightRay->direction))->add(Vector3::normalize(r->direction));
+			h->normalize();
+			for (int i = 0; i < 3; i++) {
+				//Diffuse Lighting
+				float dot = (lightRay->direction)->dot(result->normal) / (lightRay->direction->mag() * result->normal->mag());
+				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.shininess * max(0, dot);
+				//Specular Lighting
+				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.specCoeff * pow(h->dot(result->normal), result->mat.specExponent);
+			}
+		}
 	}
-	else {
-		return NULL;
-	}
+
+	return result;
 }
 
 void renderScene()
 {
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+
 	//Iterate through all screen pixels
 	for (int i = 0; i < screenWidth; i++) {
 		for (int j = 0; j < screenHeight; j++) {
@@ -87,25 +134,8 @@ void renderScene()
 			cast = new Ray();
 			*(cast->start) = *(camera->start);
 			*(cast->direction) = *(s->subtract(camera->start));
-
-			//Check for intersection with objects in scene
-			std::list<Solid*>::const_iterator objIterator;
-			Solid::Intercept* result = new Solid::Intercept();
-			result->mat.color[0] = 25;
-			result->mat.color[1] = 25;
-			result->mat.color[2] = 25;
-			result->normal = new Vector3();
-			result->t = std::numeric_limits<float>::infinity();
-
-			for (objIterator = objectList->begin(); objIterator != objectList->end(); objIterator++)
-			{
-				Solid::Intercept* hit = raycast(*objIterator, cast, MAX_RECURSION_DEPTH);
-				if (hit && hit->t < result->t) {
-					result->mat = hit->mat;
-					result->normal = hit->normal;
-					result->t = hit->t;
-				}
-			}
+			
+			Solid::Intercept* result = raycast(cast, MAX_RECURSION_DEPTH);
 
 			//If an object was hit, set the color for that pixel appropriately
 			pixelData[j][i][0] = result->mat.color[0];
@@ -121,7 +151,10 @@ void constructScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // clear the screen
 
-	light = new Vector3(2.0, 6.0, 3.0);
+	light = new Vector3(0.0, 6.0, 0.0);
+	lightColor[0] = 178;
+	lightColor[1] = 178;
+	lightColor[2] = 178;
 
 	objectList = new std::list<Solid*>();
 
@@ -131,6 +164,9 @@ void constructScene()
 	floor->mat.color[0] = 178;
 	floor->mat.color[1] = 0;
 	floor->mat.color[2] = 0;
+	floor->mat.shininess = 0.4;
+	floor->mat.specCoeff = 0.05;
+	floor->mat.specExponent = 10.0;
 	objectList->push_back(floor);
 
 	Box* wall1 = new Box();
@@ -139,6 +175,9 @@ void constructScene()
 	wall1->mat.color[0] = 178;
 	wall1->mat.color[1] = 178;
 	wall1->mat.color[2] = 178;
+	wall1->mat.shininess = 0.4;
+	wall1->mat.specCoeff = 0.05;
+	wall1->mat.specExponent = 10.0;
 	objectList->push_back(wall1);
 
 	Box* wall2 = new Box();
@@ -147,6 +186,9 @@ void constructScene()
 	wall2->mat.color[0] = 178;
 	wall2->mat.color[1] = 178;
 	wall2->mat.color[2] = 178;
+	wall2->mat.shininess = 0.4;
+	wall2->mat.specCoeff = 0.05;
+	wall2->mat.specExponent = 10.0;
 	objectList->push_back(wall2);
 }
 

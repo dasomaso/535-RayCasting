@@ -35,6 +35,8 @@ public:
 		mat.color[2] = 255;
 		mat.alpha = 1.0;
 		mat.shininess = 1.0;
+		mat.specCoeff = 1.0;
+		mat.specExponent = 200.0;
 	}
 
 	Vector3* BoundingBox() {

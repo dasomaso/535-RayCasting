@@ -18,6 +18,7 @@ public:
 	Vector3(float _x, float _y, float _z) { x = _x; y = _y; z = _z; }
 	float mag() { return sqrtf(x*x + y*y + z*z); }
 	void normalize() { x = x / mag(); y = y / mag(); z = z / mag(); }
+	static Vector3* normalize(Vector3* v) { v->normalize(); return v; }
 	
 	void print() { std::cout << "(" << x << ", " << y << ", " << z << ")"; }
 

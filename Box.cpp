@@ -29,7 +29,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->y >= -0.5 && intersect->y <= 0.5
 		&& intersect->z >= -0.5 && intersect->z <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(1.0, 0.0, 0.0);
@@ -41,7 +41,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->z >= -0.5 && intersect->z <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(0.0, 1.0, 0.0);
@@ -53,7 +53,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(0.0, 0.0, 1.0);
@@ -65,7 +65,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->z >= -0.5 && intersect->z <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(-1.0, 0.0, 0.0);
@@ -77,7 +77,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->z >= -0.5 && intersect->z <= 0.5
 		&& intersect->x >= -0.5 && intersect->x <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(0.0, -1.0, 0.0);
@@ -89,7 +89,7 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	intersect = ray.start->add(ray.direction->multiply(tmp_t));
 	if (intersect->x >= -0.5 && intersect->x <= 0.5
 		&& intersect->y >= -0.5 && intersect->y <= 0.5
-		&& tmp_t < result.t) {
+		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
 		result.point = intersect->transform(*position, *rotation, *scale);
 		result.normal = new Vector3(0.0, 0.0, -1.0);
@@ -97,8 +97,6 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	}
 
 	//Transforms normals from local to world coords
-	result.normal->transform(*position, *rotation, *scale);
-	result.normal->normalize();
 
 	return result;
 }

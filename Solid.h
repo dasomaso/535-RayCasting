@@ -19,6 +19,8 @@ public:
 		GLubyte color[3]; //rgb color
 		float alpha;
 		float shininess;
+		float specCoeff;
+		float specExponent;
 	};
 
 	struct Intercept {
@@ -43,6 +45,8 @@ public:
 		mat.color[2] = 255;
 		mat.alpha = 1.0;
 		mat.shininess = 1.0;
+		mat.specCoeff = 1.0;
+		mat.specExponent = 200.0;
 	}
 
 	virtual Solid::Intercept FindRayIntersect(Ray ray) = 0;
