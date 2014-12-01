@@ -23,80 +23,87 @@ Solid::Intercept Box::FindRayIntersect(Ray ray) {
 	ray.inverseTransform(position, rotation, scale);
 
 	float tmp_t = std::numeric_limits<float>::infinity();
-	Vector3* intersect;
+	Vector3 intersect;
 	//+x face
 	tmp_t = (0.5 - ray.start->x) / (ray.direction->x);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->y >= -0.5 && intersect->y <= 0.5
-		&& intersect->z >= -0.5 && intersect->z <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.y >= -0.5 && intersect.y <= 0.5
+		&& intersect.z >= -0.5 && intersect.z <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(1.0, 0.0, 0.0);
 		result.t = tmp_t;
 	}
 
 	//+y face
 	tmp_t = (0.5 - ray.start->y) / (ray.direction->y);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->x >= -0.5 && intersect->x <= 0.5
-		&& intersect->z >= -0.5 && intersect->z <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.x >= -0.5 && intersect.x <= 0.5
+		&& intersect.z >= -0.5 && intersect.z <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(0.0, 1.0, 0.0);
 		result.t = tmp_t;
 	}
 
 	//+z face
 	tmp_t = (0.5 - ray.start->z) / (ray.direction->z);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->x >= -0.5 && intersect->x <= 0.5
-		&& intersect->y >= -0.5 && intersect->y <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.x >= -0.5 && intersect.x <= 0.5
+		&& intersect.y >= -0.5 && intersect.y <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(0.0, 0.0, 1.0);
 		result.t = tmp_t;
 	}
 
 	//-x face
 	tmp_t = (-0.5 - ray.start->x) / (ray.direction->x);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->z >= -0.5 && intersect->z <= 0.5
-		&& intersect->y >= -0.5 && intersect->y <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.z >= -0.5 && intersect.z <= 0.5
+		&& intersect.y >= -0.5 && intersect.y <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(-1.0, 0.0, 0.0);
 		result.t = tmp_t;
 	}
 
 	//-y face
 	tmp_t = (-0.5 - ray.start->y) / (ray.direction->y);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->z >= -0.5 && intersect->z <= 0.5
-		&& intersect->x >= -0.5 && intersect->x <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.z >= -0.5 && intersect.z <= 0.5
+		&& intersect.x >= -0.5 && intersect.x <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(0.0, -1.0, 0.0);
 		result.t = tmp_t;
 	}
 
 	//-z face
 	tmp_t = (-0.5 - ray.start->z) / (ray.direction->z);
-	intersect = ray.start->add(ray.direction->multiply(tmp_t));
-	if (intersect->x >= -0.5 && intersect->x <= 0.5
-		&& intersect->y >= -0.5 && intersect->y <= 0.5
+	intersect = ray.start->add(&(ray.direction->multiply(tmp_t)));
+	if (intersect.x >= -0.5 && intersect.x <= 0.5
+		&& intersect.y >= -0.5 && intersect.y <= 0.5
 		&& tmp_t < result.t && tmp_t > 1E-6) {
 		result.mat = mat;
-		result.point = intersect->transform(*position, *rotation, *scale);
+		intersect.transform(position, rotation, scale);
+		*(result.point) = intersect;
 		result.normal = new Vector3(0.0, 0.0, -1.0);
 		result.t = tmp_t;
 	}
 
-	//Transforms normals from local to world coords
+	//Transform Ray back to world coordinates
+	ray.transform(position, rotation, scale);
 
 	return result;
 }

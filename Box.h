@@ -34,17 +34,11 @@ public:
 		mat.color[1] = 255;
 		mat.color[2] = 255;
 		mat.alpha = 1.0;
+		mat.refractIndex = 1.0;
 		mat.shininess = 1.0;
 		mat.specCoeff = 1.0;
 		mat.specExponent = 200.0;
 		mat.reflectionCoeff = 0.0;
-	}
-
-	Vector3* BoundingBox() {
-		Vector3* box[2];
-		box[0] = position->subtract(scale->divide(2));
-		box[1] = position->add(scale->divide(2));
-		return *box;
 	}
 
 	Intercept FindRayIntersect(Ray ray);

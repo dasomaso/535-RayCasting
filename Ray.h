@@ -23,18 +23,18 @@ public:
 
 	//Reverses given translation, rotation, and scale transformations
 	void inverseTransform(Vector3* pos, Vector3* rot, Vector3* scale) {
-		start = start->subtract(pos);
-		start = start->divide(scale);
+		*start = start->subtract(pos);
+		*start = start->divide(scale);
 
-		direction = direction->divide(scale);
+		*direction = direction->divide(scale);
 	}
 
 	//Applies translation, rotation, and scale transformations
 	void transform(Vector3* pos, Vector3* rot, Vector3* scale) {
-		start = start->multiply(scale);
-		start = start->add(pos);
+		*start = start->multiply(scale);
+		*start = start->add(pos);
 
-		direction = direction->multiply(scale);
+		*direction = direction->multiply(scale);
 	}
 
 	void print() {

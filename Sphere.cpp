@@ -27,21 +27,23 @@ Solid::Intercept Sphere::FindRayIntersect(Ray ray) {
 	if (quadratic >= 0) {
 		float tmp_1 = (-2 * (ray.direction->dot(ray.start)) + sqrtf(quadratic)) / (2 * ray.direction->mag() * ray.direction->mag());
 		float tmp_2 = (-2 * (ray.direction->dot(ray.start)) - sqrtf(quadratic)) / (2 * ray.direction->mag() * ray.direction->mag());
-		if (tmp_1 >= 1E-6 && tmp_2 >= 1E-6) {
+		if (tmp_1 >= 1E-5 && tmp_2 >= 1E-5) {
 			result.t = min(tmp_1, tmp_2);
-			result.point = ray.start->add(ray.direction->multiply(result.t));
-			result.normal = result.point;
 		}
-		else if (tmp_1 >= 1E-6 || tmp_1 >= 1E-6) {
+		else if (tmp_1 >= 1E-5 || tmp_1 >= 1E-5) {
 			result.t = max(tmp_1, tmp_2);
-			result.point = ray.start->add(ray.direction->multiply(result.t));
-			result.normal = result.point;
 		}
-		int a = 1;
+
+		if (result.t != std::numeric_limits<float>::infinity()) {
+			Vector3 tmp_direction = ray.direction->multiply(result.t);
+			*(result.point) = ray.start->add(&tmp_direction);
+			*(result.normal) = *(result.point);
+		}
 	}
 
 	//Transforms normals from local to world coords
-	result.point->transform(*position, *rotation, *scale);
+	ray.transform(position, rotation, scale);
+	result.point->transform(position, rotation, scale);
 	result.normal->divide(scale);
 	result.normal->normalize();
 

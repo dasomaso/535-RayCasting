@@ -27,6 +27,7 @@
 
 #include "Solid.h"
 #include "Box.h"
+#include "Sphere.h"
 #include "Vector3.h"
 #include "Ray.h"
 
@@ -42,7 +43,7 @@ GLubyte pixelData[screenHeight][screenWidth][3];
 
 Vector3* light;
 GLubyte lightColor[3];
-GLubyte ambientLight[3];
+float ambientLight[3];
 
 std::list<Solid*>* objectList;
 
@@ -65,16 +66,24 @@ Solid::Intercept* sceneHit(Ray* r) {
 
 	for (objIterator = objectList->begin(); objIterator != objectList->end(); objIterator++)
 	{
-		Solid::Intercept* hit = &((*objIterator)->FindRayIntersect(*r)); //ewwww
-		if (hit && hit->t < result->t) {
-			result->mat = hit->mat;
-			result->normal = hit->normal;
-			result->point = hit->point;
-			result->t = hit->t;
+		Solid::Intercept hit = (*objIterator)->FindRayIntersect(*r);
+		if (hit.t < result->t) {
+			result->mat = hit.mat;
+			result->normal = hit.normal;
+			result->point = hit.point;
+			result->t = hit.t;
 		}
 	}
 
 	return result;
+}
+
+GLubyte overflowFix(GLubyte a, GLubyte b) {
+	GLubyte sum = a + b;
+	if (sum < a) {
+		return 255;
+	}
+	return sum;
 }
 
 //Determines the color of the passed in ray
@@ -102,28 +111,50 @@ Solid::Intercept* raycast(Ray* r, int depth)
 
 		//Direct Lighting
 		Ray* lightRay = new Ray();
-		lightRay->start = result->point;
-		lightRay->direction = light->subtract(result->point);
+		*(lightRay->start) = *(result->point);
+		*(lightRay->direction) = light->subtract(result->point);
 		if (sceneHit(lightRay)->t == std::numeric_limits<float>::infinity()) {
-			Vector3* h = (Vector3::normalize(lightRay->direction))->add(Vector3::normalize(r->direction));
-			h->normalize();
+			lightRay->direction->normalize();
+			r->direction->normalize();
+			Vector3 h = (lightRay->direction)->subtract(r->direction);
+			h.normalize();
 			for (int i = 0; i < 3; i++) {
 				//Diffuse Lighting
-				float dot = (lightRay->direction)->dot(result->normal) / (lightRay->direction->mag() * result->normal->mag());
-				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.shininess * max(0, dot);
+				float dot = (lightRay->direction)->dot(result->normal)/* / (lightRay->direction->mag() * result->normal->mag())*/;
+				result->mat.color[i] = overflowFix(result->mat.color[i], lightColor[i] * result->mat.shininess * max(0, dot));
 				//Specular Lighting
-				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.specCoeff * pow(h->dot(result->normal), result->mat.specExponent);
+				float hnorm = pow(h.dot(result->normal), result->mat.specExponent);
+				result->mat.color[i] = overflowFix(result->mat.color[i], lightColor[i] * result->mat.specCoeff * hnorm);
 			}
 		}
 
 		//Reflected Light
-		Ray* reflectRay = new Ray();;
-		reflectRay->start = result->point;
-		reflectRay->direction = (r->direction->multiply(-1))->add(result->normal->multiply(2*(r->direction->dot(result->normal)))) ; //ewwwwwwwwwwwwww
+		Ray* reflectRay = new Ray();
+		*(reflectRay->start) = *(result->point);
+		*(reflectRay->direction) = (r->direction->multiply(-1)).add(&(result->normal->multiply(2*(r->direction->dot(result->normal))))); //ewwwwwwwwwwwwww
 		Solid::Intercept* reflectHit = raycast(reflectRay, depth - 1);
 		for (int i = 0; i < 3; i++) {
-			result->mat.color[i] = result->mat.color[i] + result->mat.specCoeff * reflectHit->mat.color[i];
+			result->mat.color[i] = overflowFix(result->mat.color[i], result->mat.reflectionCoeff * reflectHit->mat.color[i]);
 		}
+
+		//Refraction
+		Ray* refractedRay = new Ray();
+		*(refractedRay->start) = *(result->point);
+		*(refractedRay->direction) = r->direction->refract(result->normal, result->mat.refractIndex);
+		Solid::Intercept* refractHit = sceneHit(refractedRay);
+		*(r->start) = *(refractHit->point);
+
+		refractHit = raycast(r, depth - 1);
+
+		for (int i = 0; i < 3; i++) {
+			result->mat.color[i] = overflowFix((1-result->mat.alpha) * result->mat.color[i], result->mat.alpha * refractHit->mat.color[i]);
+		}
+
+		delete lightRay;
+		delete reflectRay;
+		delete reflectHit;
+		delete refractedRay;
+		delete refractHit;
 	}
 
 	return result;
@@ -149,7 +180,7 @@ void renderScene()
 
 			cast = new Ray();
 			*(cast->start) = *(camera->start);
-			*(cast->direction) = *(s->subtract(camera->start));
+			*(cast->direction) = s->subtract(camera->start);
 			
 			Solid::Intercept* result = raycast(cast, MAX_RECURSION_DEPTH);
 
@@ -167,13 +198,13 @@ void constructScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // clear the screen
 
-	light = new Vector3(0.0, 1.0, -0.5);
-	lightColor[0] = 178;
-	lightColor[1] = 178;
-	lightColor[2] = 178;
-	ambientLight[0] = 25;
-	ambientLight[1] = 25;
-	ambientLight[2] = 25;
+	light = new Vector3(0.25, 3.0, 0.5);
+	lightColor[0] = 100;
+	lightColor[1] = 100;
+	lightColor[2] = 100;
+	ambientLight[0] = 0.1;
+	ambientLight[1] = 0.1;
+	ambientLight[2] = 0.1;
 
 	objectList = new std::list<Solid*>();
 
@@ -183,10 +214,11 @@ void constructScene()
 	floor->mat.color[0] = 150;
 	floor->mat.color[1] = 0;
 	floor->mat.color[2] = 0;
+	floor->mat.alpha = 0;
 	floor->mat.shininess = 0.5;
 	floor->mat.specCoeff = 0.01;
 	floor->mat.specExponent = 10.0;
-	floor->mat.reflectionCoeff = 0.05;
+	floor->mat.reflectionCoeff = 0.01;
 	objectList->push_back(floor);
 
 	Box* wall1 = new Box();
@@ -195,10 +227,11 @@ void constructScene()
 	wall1->mat.color[0] = 178;
 	wall1->mat.color[1] = 178;
 	wall1->mat.color[2] = 178;
-	wall1->mat.shininess = 0.4;
+	wall1->mat.alpha = 0;
+	wall1->mat.shininess = 0.5;
 	wall1->mat.specCoeff = 0.1;
 	wall1->mat.specExponent = 10.0;
-	floor->mat.reflectionCoeff = 0.1;
+	wall1->mat.reflectionCoeff = 0.05;
 	objectList->push_back(wall1);
 
 	Box* wall2 = new Box();
@@ -207,10 +240,11 @@ void constructScene()
 	wall2->mat.color[0] = 178;
 	wall2->mat.color[1] = 178;
 	wall2->mat.color[2] = 178;
-	wall2->mat.shininess = 0.4;
+	wall2->mat.alpha = 0;
+	wall2->mat.shininess = 0.5;
 	wall2->mat.specCoeff = 0.1;
 	wall2->mat.specExponent = 10.0;
-	floor->mat.reflectionCoeff = 0.1;
+	wall2->mat.reflectionCoeff = 0.05;
 	objectList->push_back(wall2);
 
 	Box* dresser = new Box();
@@ -219,11 +253,26 @@ void constructScene()
 	dresser->mat.color[0] = 128;
 	dresser->mat.color[1] = 102;
 	dresser->mat.color[2] = 25;
-	dresser->mat.shininess = 0.6;
+	dresser->mat.alpha = 0;
+	dresser->mat.shininess = 0.5;
 	dresser->mat.specCoeff = 0.3;
 	dresser->mat.specExponent = 400.0;
-	floor->mat.reflectionCoeff = 0.3;
+	dresser->mat.reflectionCoeff = 0.2;
 	objectList->push_back(dresser);
+
+	Sphere* ball = new Sphere();
+	ball->scale = new Vector3(0.2, 0.2, 0.2);
+	ball->position = new Vector3(0, -0.4, 0);
+	ball->mat.color[0] = 0;
+	ball->mat.color[1] = 0;
+	ball->mat.color[2] = 178;
+	ball->mat.alpha = 0.5;
+	ball->mat.refractIndex = 1.5;
+	ball->mat.shininess = 0.5;
+	ball->mat.specCoeff = 0.7;
+	ball->mat.specExponent = 400.0;
+	ball->mat.reflectionCoeff = 0.6;
+	objectList->push_back(ball);
 }
 
 void myDisplay(void)
