@@ -301,7 +301,7 @@ void constructScene()
 	wall4->mat.specularColor[0] = 0.0;
 	wall4->mat.specularColor[1] = 0.0;
 	wall4->mat.specularColor[2] = 0.0;
-	wall4->mat.alpha = 0.6;
+	wall4->mat.alpha = 0.5;
 	wall4->mat.refractIndex = 1.5;
 	wall4->mat.specExponent = 10.0;
 	objectList->push_back(wall4);
@@ -354,6 +354,23 @@ void constructScene()
 	cube->mat.alpha = 0;
 	cube->mat.specExponent = 20.0;
 	objectList->push_back(cube);
+
+	Sphere* ellip = new Sphere();
+	ellip->scale = new Vector3(0.15, 0.07, 0.1);
+	ellip->position = new Vector3(0.3, 0.2, -0.2);
+	ellip->mat.diffuseColor[0] = 0.6;
+	ellip->mat.diffuseColor[1] = 0.6;
+	ellip->mat.diffuseColor[2] = 0;
+	ellip->mat.ambientColor[0] = 0.7;
+	ellip->mat.ambientColor[1] = 0.7;
+	ellip->mat.ambientColor[2] = 0;
+	ellip->mat.specularColor[0] = 0.8;
+	ellip->mat.specularColor[1] = 0.8;
+	ellip->mat.specularColor[2] = 0.2;
+	ellip->mat.alpha = 0.0;
+	ellip->mat.refractIndex = 1.5;
+	ellip->mat.specExponent = 200.0;
+	objectList->push_back(ellip);
 }
 
 void myDisplay(void)
@@ -394,6 +411,6 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_NORMALIZE);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.0f);  // background is light gray
-	glViewport(0, 0, 640, 480);
+	glViewport(0, 0, 933, 700);
 	glutMainLoop();
 }
