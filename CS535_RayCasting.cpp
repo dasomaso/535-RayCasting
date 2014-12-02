@@ -32,11 +32,11 @@
 #include "Ray.h"
 
 const int MAX_RECURSION_DEPTH = 8;
-const float VIEWPORT_X = 4;
-const float VIEWPORT_Y = 3;
+const float VIEWPORT_X = 3;
+const float VIEWPORT_Y = 2.25;
 const float FOCAL_LENGTH = -0.5;
-const int screenWidth = 640;
-const int screenHeight = 480;
+const int screenWidth = 800;
+const int screenHeight = 600;
 
 GLubyte pixelData[screenHeight][screenWidth][3];
 
@@ -293,10 +293,10 @@ void constructScene()
 	wall4->scale = new Vector3(0.75, 1.025, 0.05);
 	wall4->position = new Vector3(0.3875, 0.0, 0.775);
 	wall4->mat.diffuseColor[0] = 0.6;
-	wall4->mat.diffuseColor[1] = 0.6;
+	wall4->mat.diffuseColor[1] = 0.0;
 	wall4->mat.diffuseColor[2] = 0.6;
 	wall4->mat.ambientColor[0] = 0.6;
-	wall4->mat.ambientColor[1] = 0.6;
+	wall4->mat.ambientColor[1] = 0.0;
 	wall4->mat.ambientColor[2] = 0.6;
 	wall4->mat.specularColor[0] = 0.0;
 	wall4->mat.specularColor[1] = 0.0;
