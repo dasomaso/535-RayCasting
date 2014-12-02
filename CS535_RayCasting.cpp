@@ -31,7 +31,7 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-const int MAX_RECURSION_DEPTH = 4;
+const int MAX_RECURSION_DEPTH = 8;
 const float VIEWPORT_X = 4;
 const float VIEWPORT_Y = 3;
 const float FOCAL_LENGTH = -0.5;
@@ -142,11 +142,13 @@ Solid::Intercept* raycast(Ray* r, int depth)
 			//Find point refracted through object
 			*(refractedRay->start) = *(result->point);
 			*(refractedRay->direction) = r->direction->refract(result->normal, 1.0, result->mat.refractIndex);
+			refractedRay->direction->normalize();
 			Solid::Intercept* refractHit = sceneHit(refractedRay);
 
 			//Find exit ray from object
 			*(refractedRay->start) = *(refractHit->point);
-			*(refractedRay->direction) = refractedRay->direction->refract(refractHit->normal, result->mat.refractIndex, 1.0);
+			*(refractedRay->direction) = refractedRay->direction->refract(&(refractHit->normal->multiply(-1)), result->mat.refractIndex, 1.0);
+			refractedRay->direction->normalize();
 
 			if (refractedRay->direction->x != 0 && refractedRay->direction->y != 0 && refractedRay->direction->z != 0) {
 				refractHit = raycast(refractedRay, depth - 1);
@@ -226,7 +228,7 @@ void constructScene()
 	Box* floor = new Box();
 	floor->scale = new Vector3(1.5, 0.05, 1.5);
 	floor->position = new Vector3(0.0, -0.5, 0.0);
-	floor->mat.diffuseColor[0] = 0.6;
+	floor->mat.diffuseColor[0] = 0.5;
 	floor->mat.diffuseColor[1] = 0;
 	floor->mat.diffuseColor[2] = 0;
 	floor->mat.ambientColor[0] = 0.6;
@@ -242,15 +244,15 @@ void constructScene()
 	Box* wall1 = new Box();
 	wall1->scale = new Vector3(0.05, 1.025, 1.5);
 	wall1->position = new Vector3(-0.775, 0.0, 0.0);
-	wall1->mat.diffuseColor[0] = 0.6;
-	wall1->mat.diffuseColor[1] = 0.6;
-	wall1->mat.diffuseColor[2] = 0.6;
-	wall1->mat.ambientColor[0] = 0.7;
-	wall1->mat.ambientColor[1] = 0.7;
-	wall1->mat.ambientColor[2] = 0.7;
-	wall1->mat.specularColor[0] = 0.05;
-	wall1->mat.specularColor[1] = 0.05;
-	wall1->mat.specularColor[2] = 0.05;
+	wall1->mat.diffuseColor[0] = 0.0;
+	wall1->mat.diffuseColor[1] = 0.0;
+	wall1->mat.diffuseColor[2] = 0.0;
+	wall1->mat.ambientColor[0] = 0.0;
+	wall1->mat.ambientColor[1] = 0.0;
+	wall1->mat.ambientColor[2] = 0.0;
+	wall1->mat.specularColor[0] = 1.0;
+	wall1->mat.specularColor[1] = 1.0;
+	wall1->mat.specularColor[2] = 1.0;
 	wall1->mat.alpha = 0;
 	wall1->mat.specExponent = 10.0;
 	objectList->push_back(wall1);
@@ -258,18 +260,51 @@ void constructScene()
 	Box* wall2 = new Box();
 	wall2->scale = new Vector3(1.5, 1.025, 0.05);
 	wall2->position = new Vector3(0.0, 0.0, -0.775);
-	wall2->mat.diffuseColor[0] = 0.6;
-	wall2->mat.diffuseColor[1] = 0.6;
-	wall2->mat.diffuseColor[2] = 0.6;
-	wall2->mat.ambientColor[0] = 0.7;
-	wall2->mat.ambientColor[1] = 0.7;
-	wall2->mat.ambientColor[2] = 0.7;
-	wall2->mat.specularColor[0] = 0.05;
-	wall2->mat.specularColor[1] = 0.05;
-	wall2->mat.specularColor[2] = 0.05;
+	wall2->mat.diffuseColor[0] = 0.0;
+	wall2->mat.diffuseColor[1] = 0.0;
+	wall2->mat.diffuseColor[2] = 0.0;
+	wall2->mat.ambientColor[0] = 0.0;
+	wall2->mat.ambientColor[1] = 0.0;
+	wall2->mat.ambientColor[2] = 0.0;
+	wall2->mat.specularColor[0] = 1.0;
+	wall2->mat.specularColor[1] = 1.0;
+	wall2->mat.specularColor[2] = 1.0;
 	wall2->mat.alpha = 0;
 	wall2->mat.specExponent = 10.0;
 	objectList->push_back(wall2);
+
+	Box* wall3 = new Box();
+	wall3->scale = new Vector3(0.05, 1.025, 1.5);
+	wall3->position = new Vector3(0.775, 0.0, 0.0);
+	wall3->mat.diffuseColor[0] = 0.6;
+	wall3->mat.diffuseColor[1] = 0.6;
+	wall3->mat.diffuseColor[2] = 0.6;
+	wall3->mat.ambientColor[0] = 0.7;
+	wall3->mat.ambientColor[1] = 0.7;
+	wall3->mat.ambientColor[2] = 0.7;
+	wall3->mat.specularColor[0] = 0.0;
+	wall3->mat.specularColor[1] = 0;
+	wall3->mat.specularColor[2] = 0;
+	wall3->mat.alpha = 0;
+	wall3->mat.specExponent = 10.0;
+	objectList->push_back(wall3);
+
+	Box* wall4 = new Box();
+	wall4->scale = new Vector3(0.75, 1.025, 0.05);
+	wall4->position = new Vector3(0.3875, 0.0, 0.775);
+	wall4->mat.diffuseColor[0] = 0.6;
+	wall4->mat.diffuseColor[1] = 0.6;
+	wall4->mat.diffuseColor[2] = 0.6;
+	wall4->mat.ambientColor[0] = 0.6;
+	wall4->mat.ambientColor[1] = 0.6;
+	wall4->mat.ambientColor[2] = 0.6;
+	wall4->mat.specularColor[0] = 0.0;
+	wall4->mat.specularColor[1] = 0.0;
+	wall4->mat.specularColor[2] = 0.0;
+	wall4->mat.alpha = 0.6;
+	wall4->mat.refractIndex = 1.5;
+	wall4->mat.specExponent = 10.0;
+	objectList->push_back(wall4);
 
 	Box* dresser = new Box();
 	dresser->scale = new Vector3(0.2f, 0.5f, 0.4f);
@@ -299,7 +334,7 @@ void constructScene()
 	ball->mat.specularColor[0] = 0.2;
 	ball->mat.specularColor[1] = 0.2;
 	ball->mat.specularColor[2] = 0.8;
-	ball->mat.alpha = 0;
+	ball->mat.alpha = 0.3;
 	ball->mat.refractIndex = 1.5;
 	ball->mat.specExponent = 200.0;
 	objectList->push_back(ball);
@@ -316,7 +351,7 @@ void constructScene()
 	cube->mat.specularColor[0] = 0;
 	cube->mat.specularColor[1] = 0;
 	cube->mat.specularColor[2] = 0;
-	cube->mat.alpha = 0.5;
+	cube->mat.alpha = 0;
 	cube->mat.specExponent = 20.0;
 	objectList->push_back(cube);
 }
