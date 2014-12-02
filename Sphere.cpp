@@ -27,10 +27,10 @@ Solid::Intercept Sphere::FindRayIntersect(Ray ray) {
 	if (quadratic >= 0) {
 		float tmp_1 = (-2 * (ray.direction->dot(ray.start)) + sqrtf(quadratic)) / (2 * ray.direction->mag() * ray.direction->mag());
 		float tmp_2 = (-2 * (ray.direction->dot(ray.start)) - sqrtf(quadratic)) / (2 * ray.direction->mag() * ray.direction->mag());
-		if (tmp_1 >= 1E-5 && tmp_2 >= 1E-5) {
+		if (tmp_1 >= 5E-5 && tmp_2 >= 5E-5) {
 			result.t = min(tmp_1, tmp_2);
 		}
-		else if (tmp_1 >= 1E-5 || tmp_1 >= 1E-5) {
+		else if (tmp_1 >= 5E-5 || tmp_1 >= 5E-5) {
 			result.t = max(tmp_1, tmp_2);
 		}
 

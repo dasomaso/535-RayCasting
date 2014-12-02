@@ -154,7 +154,7 @@ Solid::Intercept* raycast(Ray* r, int depth)
 				refractHit = raycast(refractedRay, depth - 1);
 
 				for (int i = 0; i < 3; i++) {
-					result->mat.color[i] = (1 - result->mat.alpha) * result->mat.color[i] + result->mat.alpha * refractHit->mat.color[i];
+					result->mat.color[i] = (1 - result->mat.alpha) * result->mat.color[i] + result->mat.alpha * result->mat.diffuseColor[i] * refractHit->mat.color[i];
 				}
 			}
 
@@ -301,7 +301,7 @@ void constructScene()
 	wall4->mat.specularColor[0] = 0.0;
 	wall4->mat.specularColor[1] = 0.0;
 	wall4->mat.specularColor[2] = 0.0;
-	wall4->mat.alpha = 0.5;
+	wall4->mat.alpha = 0.7;
 	wall4->mat.refractIndex = 1.5;
 	wall4->mat.specExponent = 10.0;
 	objectList->push_back(wall4);
@@ -327,14 +327,14 @@ void constructScene()
 	ball->position = new Vector3(0, -0.25, 0);
 	ball->mat.diffuseColor[0] = 0;
 	ball->mat.diffuseColor[1] = 0;
-	ball->mat.diffuseColor[2] = 0.6;
+	ball->mat.diffuseColor[2] = 0.8;
 	ball->mat.ambientColor[0] = 0;
 	ball->mat.ambientColor[1] = 0;
-	ball->mat.ambientColor[2] = 0.7;
+	ball->mat.ambientColor[2] = 0.8;
 	ball->mat.specularColor[0] = 0.2;
 	ball->mat.specularColor[1] = 0.2;
 	ball->mat.specularColor[2] = 0.8;
-	ball->mat.alpha = 0.3;
+	ball->mat.alpha = 0.6;
 	ball->mat.refractIndex = 1.5;
 	ball->mat.specExponent = 200.0;
 	objectList->push_back(ball);
@@ -357,7 +357,7 @@ void constructScene()
 
 	Sphere* ellip = new Sphere();
 	ellip->scale = new Vector3(0.15, 0.07, 0.1);
-	ellip->position = new Vector3(0.3, 0.2, -0.2);
+	ellip->position = new Vector3(0.05, 0.2, -0.2);
 	ellip->mat.diffuseColor[0] = 0.6;
 	ellip->mat.diffuseColor[1] = 0.6;
 	ellip->mat.diffuseColor[2] = 0;
