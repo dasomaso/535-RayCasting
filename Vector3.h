@@ -99,16 +99,16 @@ public:
 		z = z+pos->z;
 	}
 
-	Vector3 refract(Vector3* n, float index) {
+	Vector3 refract(Vector3* n, float enterIndex, float exitIndex) {
 		Vector3 ans;
 		float dn = dot(n);
-		float root = 1 - (1 - dn * dn) / (index * index);
+		float root = 1 - (enterIndex * enterIndex * (1 - dn * dn)) / (exitIndex * exitIndex);
 		if (root >= 0) {
 			ans = subtract(&(n->multiply(dn)));
-			ans = ans.divide(index);
+			ans = ans.multiply(enterIndex);
+			ans = ans.divide(exitIndex);
 			ans = ans.subtract(&(n->multiply(root)));
 		}
-
 		return ans;
 	}
 };

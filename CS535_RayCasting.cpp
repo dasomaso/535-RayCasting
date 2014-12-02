@@ -31,8 +31,7 @@
 #include "Vector3.h"
 #include "Ray.h"
 
-const double PI = 3.1415926;
-const int MAX_RECURSION_DEPTH = 3;
+const int MAX_RECURSION_DEPTH = 4;
 const float VIEWPORT_X = 4;
 const float VIEWPORT_Y = 3;
 const float FOCAL_LENGTH = -0.5;
@@ -42,7 +41,7 @@ const int screenHeight = 480;
 GLubyte pixelData[screenHeight][screenWidth][3];
 
 Vector3* light;
-GLubyte lightColor[3];
+float lightColor[3];
 float ambientLight[3];
 
 std::list<Solid*>* objectList;
@@ -78,23 +77,15 @@ Solid::Intercept* sceneHit(Ray* r) {
 	return result;
 }
 
-GLubyte overflowFix(GLubyte a, GLubyte b) {
-	GLubyte sum = a + b;
-	if (sum < a) {
-		return 255;
-	}
-	return sum;
-}
-
 //Determines the color of the passed in ray
 Solid::Intercept* raycast(Ray* r, int depth)
 {
 	//Returns background color if maximum recursion depth was hit
 	if (depth == 0) { 
 		Solid::Intercept* result = new Solid::Intercept();
-		result->mat.color[0] = 25;
-		result->mat.color[1] = 25;
-		result->mat.color[2] = 25;
+		result->mat.color[0] = 0.1;
+		result->mat.color[1] = 0.1;
+		result->mat.color[2] = 0.1;
 		result->normal = new Vector3();
 		result->point = new Vector3();
 		result->t = std::numeric_limits<float>::infinity();
@@ -106,7 +97,7 @@ Solid::Intercept* raycast(Ray* r, int depth)
 	if (result->t != std::numeric_limits<float>::infinity()) {
 		//Ambient lighting
 		for (int i = 0; i < 3; i++) {
-			result->mat.color[i] = result->mat.color[i] * result->mat.shininess;
+			result->mat.color[i] = result->mat.ambientColor[i] * ambientLight[i];
 		}
 
 		//Direct Lighting
@@ -121,43 +112,67 @@ Solid::Intercept* raycast(Ray* r, int depth)
 			for (int i = 0; i < 3; i++) {
 				//Diffuse Lighting
 				float dot = (lightRay->direction)->dot(result->normal)/* / (lightRay->direction->mag() * result->normal->mag())*/;
-				result->mat.color[i] = overflowFix(result->mat.color[i], lightColor[i] * result->mat.shininess * max(0, dot));
+				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.diffuseColor[i] * max(0, dot);
 				//Specular Lighting
 				float hnorm = pow(h.dot(result->normal), result->mat.specExponent);
-				result->mat.color[i] = overflowFix(result->mat.color[i], lightColor[i] * result->mat.specCoeff * hnorm);
+				result->mat.color[i] = result->mat.color[i] + lightColor[i] * result->mat.specularColor[i] * hnorm;
 			}
 		}
 
 		//Reflected Light
-		Ray* reflectRay = new Ray();
-		*(reflectRay->start) = *(result->point);
-		*(reflectRay->direction) = (r->direction->multiply(-1)).add(&(result->normal->multiply(2*(r->direction->dot(result->normal))))); //ewwwwwwwwwwwwww
-		Solid::Intercept* reflectHit = raycast(reflectRay, depth - 1);
-		for (int i = 0; i < 3; i++) {
-			result->mat.color[i] = overflowFix(result->mat.color[i], result->mat.reflectionCoeff * reflectHit->mat.color[i]);
+		if (result->mat.specularColor[0] > 0 || result->mat.specularColor[1] > 0 || result->mat.specularColor[0] > 2) {
+			Ray* reflectRay = new Ray();
+			*(reflectRay->start) = *(result->point);
+			*(reflectRay->direction) = *(r->direction);
+			float dn = r->direction->dot(result->normal);
+			*(reflectRay->direction) = reflectRay->direction->subtract(&(result->normal->multiply(2 * dn))); //ewwwwwwwwwwwwww
+			Solid::Intercept* reflectHit = raycast(reflectRay, depth - 1);
+			for (int i = 0; i < 3; i++) {
+				result->mat.color[i] = result->mat.color[i] + result->mat.specularColor[i] * reflectHit->mat.color[i];
+			}
+
+			delete reflectRay;
+			delete reflectHit;
 		}
 
 		//Refraction
-		Ray* refractedRay = new Ray();
-		*(refractedRay->start) = *(result->point);
-		*(refractedRay->direction) = r->direction->refract(result->normal, result->mat.refractIndex);
-		Solid::Intercept* refractHit = sceneHit(refractedRay);
-		*(r->start) = *(refractHit->point);
+		if (result->mat.alpha > 0) {
+			Ray* refractedRay = new Ray();
 
-		refractHit = raycast(r, depth - 1);
+			//Find point refracted through object
+			*(refractedRay->start) = *(result->point);
+			*(refractedRay->direction) = r->direction->refract(result->normal, 1.0, result->mat.refractIndex);
+			Solid::Intercept* refractHit = sceneHit(refractedRay);
 
-		for (int i = 0; i < 3; i++) {
-			result->mat.color[i] = overflowFix((1-result->mat.alpha) * result->mat.color[i], result->mat.alpha * refractHit->mat.color[i]);
+			//Find exit ray from object
+			*(refractedRay->start) = *(refractHit->point);
+			*(refractedRay->direction) = refractedRay->direction->refract(refractHit->normal, result->mat.refractIndex, 1.0);
+
+			if (refractedRay->direction->x != 0 && refractedRay->direction->y != 0 && refractedRay->direction->z != 0) {
+				refractHit = raycast(refractedRay, depth - 1);
+
+				for (int i = 0; i < 3; i++) {
+					result->mat.color[i] = (1 - result->mat.alpha) * result->mat.color[i] + result->mat.alpha * refractHit->mat.color[i];
+				}
+			}
+
+			delete refractedRay;
+			delete refractHit;
 		}
 
 		delete lightRay;
-		delete reflectRay;
-		delete reflectHit;
-		delete refractedRay;
-		delete refractHit;
-	}
+		
 
-	return result;
+		return result;
+	}
+	else {
+		result->mat.color[0] = 0.1;
+		result->mat.color[1] = 0.1;
+		result->mat.color[2] = 0.1;
+
+		return result;
+	}
+	
 }
 
 void renderScene()
@@ -167,9 +182,9 @@ void renderScene()
 		for (int j = 0; j < screenHeight; j++) {
 
 			//Set background color
-			pixelData[j][i][0] = 0.1;
-			pixelData[j][i][1] = 0.1;
-			pixelData[j][i][2] = 0.1;
+			pixelData[j][i][0] = 25;
+			pixelData[j][i][1] = 25;
+			pixelData[j][i][2] = 25;
 
 			//Construct viewing ray
 			s = new Vector3(
@@ -186,7 +201,7 @@ void renderScene()
 
 			//If an object was hit, set the color for that pixel appropriately
 			for (int k = 0; k < 3; k++) {
-				pixelData[j][i][k] = result->mat.color[k];
+				pixelData[j][i][k] = min(result->mat.color[k] * 255, 255);
 			}
 		}
 	}
@@ -198,81 +213,112 @@ void constructScene()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        // clear the screen
 
-	light = new Vector3(0.25, 3.0, 0.5);
-	lightColor[0] = 100;
-	lightColor[1] = 100;
-	lightColor[2] = 100;
-	ambientLight[0] = 0.1;
-	ambientLight[1] = 0.1;
-	ambientLight[2] = 0.1;
+	light = new Vector3(0.6, 3.0, -0.25);
+	lightColor[0] = 1.0;
+	lightColor[1] = 1.0;
+	lightColor[2] = 1.0;
+	ambientLight[0] = 0.5;
+	ambientLight[1] = 0.5;
+	ambientLight[2] = 0.5;
 
 	objectList = new std::list<Solid*>();
 
 	Box* floor = new Box();
 	floor->scale = new Vector3(1.5, 0.05, 1.5);
 	floor->position = new Vector3(0.0, -0.5, 0.0);
-	floor->mat.color[0] = 150;
-	floor->mat.color[1] = 0;
-	floor->mat.color[2] = 0;
+	floor->mat.diffuseColor[0] = 0.6;
+	floor->mat.diffuseColor[1] = 0;
+	floor->mat.diffuseColor[2] = 0;
+	floor->mat.ambientColor[0] = 0.6;
+	floor->mat.ambientColor[1] = 0;
+	floor->mat.ambientColor[2] = 0;
+	floor->mat.specularColor[0] = 0;
+	floor->mat.specularColor[1] = 0;
+	floor->mat.specularColor[2] = 0;
 	floor->mat.alpha = 0;
-	floor->mat.shininess = 0.5;
-	floor->mat.specCoeff = 0.01;
 	floor->mat.specExponent = 10.0;
-	floor->mat.reflectionCoeff = 0.01;
 	objectList->push_back(floor);
 
 	Box* wall1 = new Box();
 	wall1->scale = new Vector3(0.05, 1.025, 1.5);
 	wall1->position = new Vector3(-0.775, 0.0, 0.0);
-	wall1->mat.color[0] = 178;
-	wall1->mat.color[1] = 178;
-	wall1->mat.color[2] = 178;
+	wall1->mat.diffuseColor[0] = 0.6;
+	wall1->mat.diffuseColor[1] = 0.6;
+	wall1->mat.diffuseColor[2] = 0.6;
+	wall1->mat.ambientColor[0] = 0.7;
+	wall1->mat.ambientColor[1] = 0.7;
+	wall1->mat.ambientColor[2] = 0.7;
+	wall1->mat.specularColor[0] = 0.05;
+	wall1->mat.specularColor[1] = 0.05;
+	wall1->mat.specularColor[2] = 0.05;
 	wall1->mat.alpha = 0;
-	wall1->mat.shininess = 0.5;
-	wall1->mat.specCoeff = 0.1;
 	wall1->mat.specExponent = 10.0;
-	wall1->mat.reflectionCoeff = 0.05;
 	objectList->push_back(wall1);
 
 	Box* wall2 = new Box();
 	wall2->scale = new Vector3(1.5, 1.025, 0.05);
 	wall2->position = new Vector3(0.0, 0.0, -0.775);
-	wall2->mat.color[0] = 178;
-	wall2->mat.color[1] = 178;
-	wall2->mat.color[2] = 178;
+	wall2->mat.diffuseColor[0] = 0.6;
+	wall2->mat.diffuseColor[1] = 0.6;
+	wall2->mat.diffuseColor[2] = 0.6;
+	wall2->mat.ambientColor[0] = 0.7;
+	wall2->mat.ambientColor[1] = 0.7;
+	wall2->mat.ambientColor[2] = 0.7;
+	wall2->mat.specularColor[0] = 0.05;
+	wall2->mat.specularColor[1] = 0.05;
+	wall2->mat.specularColor[2] = 0.05;
 	wall2->mat.alpha = 0;
-	wall2->mat.shininess = 0.5;
-	wall2->mat.specCoeff = 0.1;
 	wall2->mat.specExponent = 10.0;
-	wall2->mat.reflectionCoeff = 0.05;
 	objectList->push_back(wall2);
 
 	Box* dresser = new Box();
 	dresser->scale = new Vector3(0.2f, 0.5f, 0.4f);
 	dresser->position = new Vector3(-0.625f, -0.25f, 0.475f);
-	dresser->mat.color[0] = 128;
-	dresser->mat.color[1] = 102;
-	dresser->mat.color[2] = 25;
+	dresser->mat.diffuseColor[0] = 0.4;
+	dresser->mat.diffuseColor[1] = 0.3;
+	dresser->mat.diffuseColor[2] = 0;
+	dresser->mat.ambientColor[0] = 0.5;
+	dresser->mat.ambientColor[1] = 0.4;
+	dresser->mat.ambientColor[2] = 0.1;
+	dresser->mat.specularColor[0] = 0.3;
+	dresser->mat.specularColor[1] = 0.1;
+	dresser->mat.specularColor[2] = 0.0;
 	dresser->mat.alpha = 0;
-	dresser->mat.shininess = 0.5;
-	dresser->mat.specCoeff = 0.3;
-	dresser->mat.specExponent = 400.0;
-	dresser->mat.reflectionCoeff = 0.2;
+	dresser->mat.specExponent = 200.0;
 	objectList->push_back(dresser);
 
 	Sphere* ball = new Sphere();
 	ball->scale = new Vector3(0.2, 0.2, 0.2);
-	ball->position = new Vector3(0, -0.4, 0);
-	ball->mat.color[0] = 0;
-	ball->mat.color[1] = 0;
-	ball->mat.color[2] = 178;
-	ball->mat.alpha = 0.5;
+	ball->position = new Vector3(0, -0.25, 0);
+	ball->mat.diffuseColor[0] = 0;
+	ball->mat.diffuseColor[1] = 0;
+	ball->mat.diffuseColor[2] = 0.6;
+	ball->mat.ambientColor[0] = 0;
+	ball->mat.ambientColor[1] = 0;
+	ball->mat.ambientColor[2] = 0.7;
+	ball->mat.specularColor[0] = 0.2;
+	ball->mat.specularColor[1] = 0.2;
+	ball->mat.specularColor[2] = 0.8;
+	ball->mat.alpha = 0;
 	ball->mat.refractIndex = 1.5;
-	ball->mat.shininess = 0.5;
-	ball->mat.specCoeff = 0.7;
-	ball->mat.specExponent = 400.0;
-	ball->mat.reflectionCoeff = 0.6;
+	ball->mat.specExponent = 200.0;
 	objectList->push_back(ball);
+
+	Box* cube = new Box();
+	cube->scale = new Vector3(0.15f, 0.15f, 0.15f);
+	cube->position = new Vector3(-0.35f, -0.3f, 0.4f);
+	cube->mat.diffuseColor[0] = 0.0;
+	cube->mat.diffuseColor[1] = 1.0;
+	cube->mat.diffuseColor[2] = 0;
+	cube->mat.ambientColor[0] = 0;
+	cube->mat.ambientColor[1] = 0.7;
+	cube->mat.ambientColor[2] = 0;
+	cube->mat.specularColor[0] = 0;
+	cube->mat.specularColor[1] = 0;
+	cube->mat.specularColor[2] = 0;
+	cube->mat.alpha = 0.5;
+	cube->mat.specExponent = 20.0;
+	objectList->push_back(cube);
 }
 
 void myDisplay(void)
